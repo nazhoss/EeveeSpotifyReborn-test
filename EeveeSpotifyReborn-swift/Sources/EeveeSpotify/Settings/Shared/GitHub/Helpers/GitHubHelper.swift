@@ -1,0 +1,50 @@
+import Foundation
+
+struct GitHubHelper {
+    private let apiUrl = "https://api.github.com"
+    private let decoder = JSONDecoder()
+    
+    static let shared = GitHubHelper()
+    
+    init() {
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+    }
+    
+    private func perform(_ path: String) async throws -> Data {
+        guard let url = URL(string: "\(apiUrl)\(path)") else {
+            throw URLError(.badURL)
+        }
+
+        let (data, _) = try await URLSession.shared.data(from: url)
+        
+        return data
+    }
+    
+    func getLatestRelease() async throws -> GitHubRelease {
+        let data = try await perform("/repos/whoeevee/EeveeSpotifyReborn/releases/latest")
+        return try decoder.decode(GitHubRelease.self, from: data)
+    }
+    
+    func getUser(_ username: String) async throws -> GitHubUser {
+        let data = try await perform("/users/\(username)")
+        return try decoder.decode(GitHubUser.self, from: data)
+    }
+    
+    func getContributors() async throws -> [GitHubUser] {
+        let data = try await perform("/repos/whoeevee/EeveeSpotifyReborn/contributors")
+        return try decoder.decode([GitHubUser].self, from: data)
+    }
+    
+    func getEeveeContributorSections() async throws -> [EeveeContributorSection] {
+        guard let url = URL(
+            string: "https://raw.githubusercontent.com/whoeevee/EeveeSpotifyReborn/swift/contributors.json"
+        ) else {
+            throw URLError(.badURL)
+        }
+
+        let (data, _) = try await URLSession.shared.data(
+            from: url
+        )
+        return try decoder.decode([EeveeContributorSection].self, from: data)
+    }
+}
