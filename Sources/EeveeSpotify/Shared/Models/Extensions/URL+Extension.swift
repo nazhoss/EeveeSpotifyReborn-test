@@ -28,12 +28,4 @@ extension URL {
     var isBootstrap: Bool {
         self.path.contains("v1/bootstrap")
     }
-    
-    var isAdRelated: Bool {
-        guard let host = self.host else { return false }
-        return host.contains("audio-ads.spotify.com") ||
-               host.contains("adeventtracker.spotify.com") ||
-               host.contains("spclient.wg.spotify.com") && self.path.contains("ad-logic") ||
-               self.path.contains("v1/ads")
-    }
 }

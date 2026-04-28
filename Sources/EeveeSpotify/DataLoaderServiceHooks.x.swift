@@ -89,19 +89,8 @@ class SPTDataLoaderServiceHook: ClassHook<NSObject>, SpotifySessionDelegate {
         didReceiveResponse response: HTTPURLResponse,
         completionHandler handler: @escaping (URLSession.ResponseDisposition) -> Void
     ) {
-        guard let url = task.currentRequest?.url else {
-            orig.URLSession(session, dataTask: task, didReceiveResponse: response, completionHandler: handler)
-            return
-        }
-        
-        if url.isAdRelated {
-            let forbiddenResponse = HTTPURLResponse(url: url, statusCode: 403, httpVersion: "2.0", headerFields: [:])!
-            orig.URLSession(session, dataTask: task, didReceiveResponse: forbiddenResponse, completionHandler: handler)
-            respondWithCustomData(Data(), task: task, session: session)
-            return
-        }
-
         guard
+            let url = task.currentRequest?.url,
             url.isLyrics,
             response.statusCode != 200
         else {
