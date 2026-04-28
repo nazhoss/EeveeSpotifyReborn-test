@@ -89,7 +89,7 @@ jobs:
         run: |
           ivinject-arm64 spotify.ipa EeveeSpotify.ipa \
             -i eeveespotify.deb "$SWIFTPROTOBUF_ROOTFUL" "$OPENSPOTIFYSAFARIEXTENSION" \
-            -s - -d -r PlugIns Watch AppClip --level Optimal
+            -s - -d -r PlugIns Watch --level Optimal
 
       - name: Create Patched Package
         run: ipapatch -input EeveeSpotify.ipa -output EeveeSpotify-patched.ipa

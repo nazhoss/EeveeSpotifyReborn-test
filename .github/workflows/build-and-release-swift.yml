@@ -147,7 +147,7 @@ jobs:
 
         ivinject-arm64 "$SPOTIFY_PACKAGE" "$EEVEESPOTIFY_PACKAGE" \
           -i "$EEVEESPOTIFY_ROOTFUL" "$SWIFTPROTOBUF_ROOTFUL" "$OPENSPOTIFYSAFARIEXTENSION" \
-          -s - -d -r PlugIns Watch AppClip --level Optimal
+          -s - -d -r PlugIns Watch --level Optimal
 
     - name: Create Patched Package
       run: |
