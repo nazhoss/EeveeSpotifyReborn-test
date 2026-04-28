@@ -99,62 +99,6 @@ jobs:
         echo "SWIFTPROTOBUF_ROOTFUL=org.swift.protobuf.swiftprotobuf_${{ env.SWIFTPROTOBUF_VERSION }}_iphoneos-arm.deb" >> $GITHUB_ENV
         echo "SWIFTPROTOBUF_ROOTLESS=org.swift.protobuf.swiftprotobuf_${{ env.SWIFTPROTOBUF_VERSION }}_iphoneos-arm64.deb" >> $GITHUB_ENV
 
-    - name: Download OpenSpotifySafariExtension
-      run: |
-        git clone https://github.com/BillyCurtis/OpenSpotifySafariExtension
-        echo "OPENSPOTIFYSAFARIEXTENSION=OpenSpotifySafariExtension/OpenSpotifySafariExtension.appex" >> $GITHUB_ENV
-
-    - name: Download Decrypted Spotify Package
-      run: |
-        response=$(curl -ks 'https://decrypt.whoeevee.com/decrypted?appId=324684580&apiKey=${{ secrets.EEVEEDECRYPTER_API_KEY }}')
-        link=$(echo "$response" | jq -r '.link')
-        wget --no-check-certificate -q $link
-        echo "SPOTIFY_VERSION=${${(s/-/)link}[2]%.ipa}" >> $GITHUB_ENV
-        echo "SPOTIFY_PACKAGE=$(echo *.ipa)" >> $GITHUB_ENV
-
-    - name: Setup insert-dylib
-      run: |
-        git clone https://github.com/Tyilo/insert_dylib.git
-        xcrun clang -x c -arch arm64 ./insert_dylib/insert_dylib/main.c -I/usr/include/ -o insert-dylib
-        sudo mv insert-dylib /usr/local/bin/
-        sudo chmod +x /usr/local/bin/insert-dylib
-
-    - name: Setup ivinject
-      run: |
-        git clone https://github.com/whoeevee/ivinject.git
-        cp -r ./ivinject/KnownFrameworks ~/.ivinject
-        wget https://github.com/whoeevee/ivinject/releases/download/first/ivinject-arm64
-        sudo mv ivinject-arm64 /usr/local/bin/
-        sudo chmod +x /usr/local/bin/ivinject-arm64
-
-    - name: Setup ipapatch
-      run: |
-        wget https://github.com/asdfzxcvbn/ipapatch/releases/download/v2.1.0/ipapatch.macos-arm64
-        sudo mv ipapatch.macos-arm64 /usr/local/bin/ipapatch
-        sudo chmod +x /usr/local/bin/ipapatch
-
-    - name: Check Version
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: |
-        LATEST_EEVEESPOTIFY_VERSION=$(gh release list --limit 1 --json tagName --jq '.[0].tagName[5:]')
-        echo "LATEST_EEVEESPOTIFY_VERSION=$LATEST_EEVEESPOTIFY_VERSION" >> $GITHUB_ENV
-
-    - name: Create EeveeSpotify Package
-      run: |
-        EEVEESPOTIFY_PACKAGE="EeveeSpotify-${EEVEESPOTIFY_VERSION}-${SPOTIFY_VERSION}.ipa"
-        echo "EEVEESPOTIFY_PACKAGE=$EEVEESPOTIFY_PACKAGE" >> $GITHUB_ENV
-
-        ivinject-arm64 "$SPOTIFY_PACKAGE" "$EEVEESPOTIFY_PACKAGE" \
-          -i "$EEVEESPOTIFY_ROOTFUL" "$SWIFTPROTOBUF_ROOTFUL" "$OPENSPOTIFYSAFARIEXTENSION" \
-          -s - -d -r PlugIns Watch --level Optimal
-
-    - name: Create Patched Package
-      run: |
-        EEVEESPOTIFY_PATCHED_PACKAGE="EeveeSpotify-${EEVEESPOTIFY_VERSION}-${SPOTIFY_VERSION}-patched.ipa"
-        echo "EEVEESPOTIFY_PATCHED_PACKAGE=$EEVEESPOTIFY_PATCHED_PACKAGE" >> $GITHUB_ENV
-
-        ipapatch -input "$EEVEESPOTIFY_PACKAGE" -output "$EEVEESPOTIFY_PATCHED_PACKAGE"
 
     - name: Compose Changelog
       if: env.LATEST_EEVEESPOTIFY_VERSION != env.EEVEESPOTIFY_VERSION
@@ -208,11 +152,3 @@ jobs:
           "$SWIFTPROTOBUF_ROOTFUL" "$SWIFTPROTOBUF_ROOTLESS" \
           --clobber
 
-    - name: Upload Packages to Telegram
-      env:
-        API_ID: ${{ secrets.API_ID }}
-        API_HASH: ${{ secrets.API_HASH }}
-        BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-        EEVEESPOTIFY_CHANNEL_ID: ${{ secrets.EEVEESPOTIFY_CHANNEL_ID }}
-        EEVEESPOTIFY_CHANNEL_ACCESS_HASH: ${{ secrets.EEVEESPOTIFY_CHANNEL_ACCESS_HASH }}
-      run: ./Tools/TelegramUploadEeveeSpotify
